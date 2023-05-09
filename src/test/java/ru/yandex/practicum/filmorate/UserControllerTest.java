@@ -54,7 +54,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void failsWhenLoginIsIncorrect(){
+    public void failsWhenLoginIsIncorrect() {
         // arrange
         User user = new User(1, "user@mail.ru","login 123", "User name",
                 LocalDate.of(2020,12,10));
