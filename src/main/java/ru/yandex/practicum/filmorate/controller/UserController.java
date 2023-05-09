@@ -24,7 +24,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User user){
+    public User create(@Valid @RequestBody User user) {
         User validatedUser = validateUser(user);
         if (users.containsKey(validatedUser.getId())) {
             throw new ValidationException("Пользователь с электронной почтой " +
