@@ -27,8 +27,8 @@ public class FilmControllerTest {
     @Test
     public void failsWhenFilmNameIsEmpty() {
         // arrange
-        Film film = new Film(1, "","film about something",
-                LocalDate.of(2020,12,10), 120);
+        Film film = new Film(1, null, "film about something",
+                LocalDate.of(2020, 12, 10), 120);
 
         //act
         Exception exception = Assertions.assertThrows(ValidationException.class, () -> filmController.create(film));
@@ -40,10 +40,10 @@ public class FilmControllerTest {
 
     @Test
     public void failsWhenDescriptionIsOver200() {
-        Film film = new Film(1, "Film name","Avatar is an American media franchise created " +
+        Film film = new Film(1, "Film name", "Avatar is an American media franchise created " +
                 "by James Cameron, which consists of a planned series of epic science fiction films produced " +
                 "by Lightstorm Entertainment and distributed by 20th Century Studio.",
-                LocalDate.of(2020,12,10), 120);
+                LocalDate.of(2020, 12, 10), 120);
 
         //act
         Exception exception = Assertions.assertThrows(ValidationException.class, () -> filmController.create(film));
@@ -55,8 +55,8 @@ public class FilmControllerTest {
 
     @Test
     public void failsWhenDateIsBefore28Dec1895() {
-        Film film = new Film(1, "Film name","Film description",
-                LocalDate.of(1800,12,10), 120);
+        Film film = new Film(1, "Film name", "Film description",
+                LocalDate.of(1800, 12, 10), 120);
 
         //act
         Exception exception = Assertions.assertThrows(ValidationException.class, () -> filmController.create(film));
@@ -68,8 +68,8 @@ public class FilmControllerTest {
 
     @Test
     public void failsWhenDurationIsNegative() {
-        Film film = new Film(1, "Film name","Film description",
-                LocalDate.of(2000,12,10), -120);
+        Film film = new Film(1, "Film name", "Film description",
+                LocalDate.of(2000, 12, 10), -120);
 
         //act
         Exception exception = Assertions.assertThrows(ValidationException.class, () -> filmController.create(film));

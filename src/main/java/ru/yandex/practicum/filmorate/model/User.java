@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 @Data
@@ -20,7 +18,10 @@ public class User {
     @Email
     private String email;
     @NotNull
+    @Pattern(regexp = "^([a-zA-Z0-9.]+@){0,1}([a-zA-Z0-9.])+$", message =
+            "Некорректно заданный логин: значение пустое либо содержит пробел.")
     private String login;
     private String name;
+    @Past(message = "Дата рождения пользователя не может быть в будущем")
     private LocalDate birthday;
 }
