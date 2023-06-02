@@ -6,14 +6,8 @@ import ru.yandex.practicum.filmorate.validation.After;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-
-/*
-* Владимир, добрый день, все внедрила.
-* Однако junit тесты теперь не работают. Я так понимаю, что при создании объекта film или user вручную через
-* конструктор - аннотации не работают. Почитала про тестирование в spring boot, - там используется MockMvc.
-* Судя по всему, он у нас будет позже.
-*
-* */
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -35,4 +29,5 @@ public class Film {
 
     @PositiveOrZero(message = "Описание фильма не может превышать 200 символов.")
     private int duration;
+    private Set<Integer> likes;
 }
