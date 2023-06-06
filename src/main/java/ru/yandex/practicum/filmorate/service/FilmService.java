@@ -1,21 +1,21 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
 
-    private final FilmStorage filmStorage = InMemoryFilmStorage.getInstance();
-    private final UserStorage userStorage = InMemoryUserStorage.getInstance();
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
     public Film addLike(Integer filmId, Integer userId) {
         Film film = filmStorage.getFilmById(filmId);

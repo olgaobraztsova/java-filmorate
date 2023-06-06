@@ -12,20 +12,7 @@ import java.util.Map;
 @Component
 public class InMemoryUserStorage implements UserStorage {
 
-    private static InMemoryUserStorage obj;
-    private static final Map<Integer, User> users = new HashMap<>();
-
-    private InMemoryUserStorage() {
-
-    }
-
-    public static InMemoryUserStorage getInstance() {
-        if (obj == null) {
-            obj = new InMemoryUserStorage();
-        }
-        return obj;
-    }
-
+    private final Map<Integer, User> users = new HashMap<>();
 
     @Override
     public Collection<User> getAllUsers() {
@@ -42,6 +29,10 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User create(User user) {
+        // создание ID пользователя
+        if (user.getId() == null) {
+            user.setId(getAllUsers().size() + 1);
+        }
         if (users.containsKey(user.getId())) {
             throw new ValidationException("Пользователь с электронной почтой " +
                     user.getEmail() + " уже зарегистрирован.");

@@ -9,19 +9,7 @@ import java.util.*;
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
 
-    private static InMemoryFilmStorage obj;
-    private static final Map<Integer, Film> films = new HashMap<>();
-
-    private InMemoryFilmStorage() {
-
-    }
-
-    public static InMemoryFilmStorage getInstance() {
-        if (obj == null) {
-            obj = new InMemoryFilmStorage();
-        }
-        return obj;
-    }
+    private final Map<Integer, Film> films = new HashMap<>();
 
     @Override
     public Collection<Film> getAllFilms() {
@@ -30,7 +18,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film getFilmById(Integer id) {
-        if (!films.containsKey(id)) {
+        if (!checkIfFilmExists(id)) {
             throw new FilmNotFoundException("Фильма c ID " + id + "  в базе не существует");
         }
         return films.get(id);
@@ -38,6 +26,10 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
+        if (film.getId() == null) {
+            film.setId(getAllFilms().size() + 1);
+        }
+
         Set<Integer> emptyLikes = new HashSet<>();
         film.setLikes(emptyLikes);
         films.put(film.getId(), film);
@@ -51,17 +43,16 @@ public class InMemoryFilmStorage implements FilmStorage {
             film.setLikes(emptyLikes);
         }
 
-        if (films.containsKey(film.getId())) {
+        if (checkIfFilmExists(film.getId())) {
             films.put(film.getId(), film);
-        } else {
-            throw new FilmNotFoundException("Такого фильма в базе не существует");
         }
         return film;
     }
 
-    @Override
-    public Boolean delete(Film film) {
-        return null;
+    private boolean checkIfFilmExists(Integer id) {
+        if (!films.containsKey(id)) {
+            throw new FilmNotFoundException("Фильма c ID " + id + "  в базе не существует");
+        }
+        return true;
     }
-
 }
