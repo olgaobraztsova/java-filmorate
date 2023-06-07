@@ -5,9 +5,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashSet;
 
 public class UserControllerTest {
 
@@ -22,17 +26,18 @@ public class UserControllerTest {
 
     @BeforeEach
     public void beforeEach() {
-        userController = new UserController();
+        UserStorage userStorage = new InMemoryUserStorage();
+        userController = new UserController(userStorage, new UserService(userStorage));
     }
 
     @Test
     public void acceptsEmptyNameAndReplacesWithLoginValue() {
         // arrange
         User user = new User(1, "user@mail.ru","login123", "",
-                LocalDate.of(2020,12,10));
+                LocalDate.of(2020,12,10), new HashSet<>());
 
         User expectedUser = new User(1, "user@mail.ru","login123", "login123",
-                LocalDate.of(2020,12,10));
+                LocalDate.of(2020,12,10), new HashSet<>());
         //act
         userController.create(user);
         Collection<User> usersList = userController.getAllUsers();
