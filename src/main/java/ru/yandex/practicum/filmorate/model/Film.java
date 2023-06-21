@@ -29,6 +29,8 @@ public class Film {
     @PositiveOrZero(message = "Описание фильма не может превышать 200 символов.")
     private int duration;
     private Set<Integer> likes;
-    private Set<String> genre;
-    private String rating;
+    private Set<Genre> genres;
+    private Mpa mpa;
+
+
 }

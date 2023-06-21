@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import javax.validation.Valid;
 import java.util.Collection;
@@ -17,29 +16,28 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserStorage userStorage;
     private final UserService userService;
 
     @GetMapping
     public Collection<User> getAllUsers() {
-        return userStorage.getAllUsers();
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
     public User getUser(@PathVariable("id") String id) {
-        return userStorage.getUserById(Integer.parseInt(id));
+        return userService.getUser(id);
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        User validatedSavedUser = userStorage.create(validateUser(user));
+        User validatedSavedUser = userService.create(validateUser(user));
         log.debug("Сохранен пользователь {}", validatedSavedUser);
         return validatedSavedUser;
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        User validatedSavedUser = userStorage.update(validateUser(user));
+        User validatedSavedUser = userService.update(validateUser(user));
         log.debug("Обновлен пользователь {}", validatedSavedUser);
         return validatedSavedUser;
     }
@@ -53,9 +51,9 @@ public class UserController {
 
     // DELETE /users/{id}/friends/{friendId} — удаление из друзей.
     @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+    public void deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.debug("Пользователи с ID={} и ID={} теперь не друзья", id, friendId);
-        return userService.removeFriend(id, friendId);
+        userService.removeFriend(id, friendId);
     }
 
     //GET /users/{id}/friends — возвращаем список пользователей, являющихся его друзьями.
