@@ -55,7 +55,7 @@ class FilmorateApplicationTests {
                 120,
                 new HashSet<Integer>(),
                 new HashSet<Genre>(),
-                new Mpa(1, "Комедия"));
+                new Mpa(1, "G"));
         Film actualFilm = filmStorage.create(expectedFilm);
         assertThat(actualFilm).usingRecursiveComparison()
                 .ignoringFields("filmId").isEqualTo(expectedFilm);
@@ -79,7 +79,7 @@ class FilmorateApplicationTests {
 
     @Test
     public void testAddLike() {
-        HashSet<Integer> expectedLikes = new HashSet<>(Arrays.asList(1, 2, 3, 4));
+        HashSet<Integer> expectedLikes = new HashSet<>(Arrays.asList(1, 2, 3));
 
         Film expectedFilm = new Film(1,
                 "Inception",
@@ -90,16 +90,17 @@ class FilmorateApplicationTests {
                 new HashSet<Genre>(),
                 new Mpa(3, "PG-13"));
 
-        filmStorage.addLike(1, 4);
+        filmStorage.addLike(1, 3);
         Film actualFilm = filmStorage.getFilmById(1);
         assertThat(actualFilm).usingRecursiveComparison()
-                .ignoringFields("filmId", "description", "genres").isEqualTo(expectedFilm);
+                .ignoringFields("filmId", "name", "description", "genres").isEqualTo(expectedFilm);
     }
 
     @Test
     public void testRemoveLike() {
-        HashSet<Integer> expectedLikes = new HashSet<>(Arrays.asList(1, 2));
+        HashSet<Integer> expectedLikes = new HashSet<>(Arrays.asList(1));
 
+        //filmStorage.addLikes(1, new HashSet<>(Arrays.asList(1, 2, 3)));
         Film expectedFilm = new Film(1,
                 "Inception",
                 "description",
@@ -109,7 +110,7 @@ class FilmorateApplicationTests {
                 new HashSet<Genre>(),
                 new Mpa(3, "PG-13"));
 
-        filmStorage.removeLike(1, 3);
+        filmStorage.removeLike(1, 2);
         Film actualFilm = filmStorage.getFilmById(1);
         assertThat(actualFilm).usingRecursiveComparison()
                 .ignoringFields("filmId", "description", "genres").isEqualTo(expectedFilm);

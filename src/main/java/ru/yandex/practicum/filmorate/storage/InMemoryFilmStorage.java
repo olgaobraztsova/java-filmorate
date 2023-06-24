@@ -30,16 +30,15 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Integer addLike(Integer filmId, Integer userId) {
+    public void addLike(Integer filmId, Integer userId) {
         Film film = getFilmById(filmId);
-        User user = userStorage.getUserById(userId);
+        Set<Integer> likesToAdd = film.getLikes();
+
+        likesToAdd.add(userId);
 
         // добавить лайк и обновить фильм в базе
-        Set<Integer> likes = film.getLikes();
-        likes.add(user.getId());
-        film.setLikes(likes);
+        film.setLikes(likesToAdd);
         update(film);
-        return userId;
     }
 
     @Override

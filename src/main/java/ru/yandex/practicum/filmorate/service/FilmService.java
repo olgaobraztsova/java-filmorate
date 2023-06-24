@@ -31,8 +31,8 @@ public class FilmService {
         return filmStorage.update(film);
     }
 
-    public Integer addLike(Integer filmId, Integer userId) {
-        return filmStorage.addLike(filmId, userId);
+    public void addLike(Integer filmId, Integer userId) {
+        filmStorage.addLike(filmId, userId);
     }
 
     public boolean removeLike(Integer filmId, Integer userId) {

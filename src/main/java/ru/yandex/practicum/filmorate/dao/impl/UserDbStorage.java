@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -26,8 +27,13 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Collection<User> getAllUsers() {
-        final String sqlQuery = "SELECT user_id, email, login, name, birthday, FROM users;";
-        return jdbcTemplate.query(sqlQuery, UserDbStorage::construct);
+        final String sqlQuery =
+                "SELECT u.user_id, u.email, u.login, u.name, u.birthday, f.friend_id " +
+                        "FROM users u " +
+                        "LEFT JOIN friendships f ON f.user_id = u.user_id " +
+                        "ORDER BY user_id ASC;";
+
+        return jdbcTemplate.query(sqlQuery, new UserMapper());
     }
 
     @Override
@@ -56,15 +62,13 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User update(User user) {
         // check if user exists
-        if (getUserById(user.getId()) == null) {
-            throw new UserNotFoundException("Пользователя с ID " + user.getId() + " не существует");
-        }
-        //check if friends list is empty in json
+        User userFromDb = getUserById(user.getId()); // method throws exception if user doesn't exist
+
         if (user.getFriends() == null) {
             user.setFriends(new HashSet<>());
         }
 
-        Set<Integer> currentFriends = getFriendsById(user.getId());
+        Set<Integer> currentFriends = userFromDb.getFriends();
         Set<Integer> newFriends = user.getFriends();
 
         String sqlQuery = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
@@ -78,19 +82,7 @@ public class UserDbStorage implements UserStorage {
         );
 
         if (!currentFriends.equals(newFriends)) {
-            if (!currentFriends.isEmpty()) {
-                for (Integer friendId : currentFriends) {
-                    removeFriend(user.getId(), friendId);
-                }
-            }
-
-            if (newFriends == null || !newFriends.isEmpty()) {
-                for (Integer friendId : newFriends) {
-                    addFriend(user.getId(), friendId);
-                }
-            } else {
-                user.setFriends(new HashSet<>());
-            }
+                updateFriends(userFromDb, currentFriends, newFriends);
         }
         return getUserById(user.getId());
     }
@@ -103,33 +95,34 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User getUserById(Integer id) {
-        final String sqlQuery = "SELECT user_id, email, login, name, birthday, FROM users WHERE user_id = ?";
-        final List<User> users = jdbcTemplate.query(sqlQuery, UserDbStorage::construct, id);
+        final String sqlQuery =
+                "SELECT u.user_id, u.email, u.login, u.name, u.birthday, f.friend_id " +
+                        "FROM users u " +
+                        "LEFT JOIN friendships f ON f.user_id = u.user_id " +
+                        "WHERE u.user_id = ?" +
+                        "ORDER BY u.user_id ASC;";
 
+        final List<User> users = jdbcTemplate.query(sqlQuery, new UserMapper(), id);
+
+        assert users != null;
         if (users.isEmpty()) {
             throw new UserNotFoundException("Пользователя с ID " + id + " не существует");
         } else if (users.size() > 1) {
             throw new IllegalStateException();
         } else {
-            // получить список друзей пользователя если они есть и добавить в объект пользователя
-            Set<Integer> friendsList = new HashSet<>(getFriendsById(users.get(0).getId()));
-            users.get(0).setFriends(friendsList);
             return users.get(0);
         }
     }
 
     @Override
     public boolean addFriend(Integer userId, Integer friendId) {
+
         // check if users exist
-        if (getUserById(userId) == null) {
-            throw new UserNotFoundException("Пользователь с ID " + userId + " не найден");
-        }
-        if (getUserById(friendId) == null) {
-            throw new UserNotFoundException("Пользователь с ID " + friendId + " не найден");
-        }
+        User user = getUserById(userId); // method throws exception if user doesn't exist
+        User friend = getUserById(friendId); // method throws exception if user doesn't exist
 
         // check if user is already in the friend list
-        Set<Integer> userFriends = getFriendsById(userId);
+        Set<Integer> userFriends = user.getFriends();
 
         if (!userFriends.contains(friendId)) {
             final String sqlQuery = "INSERT INTO friendships (user_id, friend_Id) VALUES (?, ?);";
@@ -142,14 +135,10 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public boolean removeFriend(Integer userId, Integer friendId) {
-        if (getUserById(userId) == null) {
-            throw new UserNotFoundException("Пользователь с ID " + userId + " не найден");
-        }
-        if (getUserById(friendId) == null) {
-            throw new UserNotFoundException("Пользователь с ID " + friendId + " не найден");
-        }
+        User user = getUserById(userId); // method throws exception if user doesn't exist
+
         //check if 'friendId' is in the friends list of userId
-        Set<Integer> userFriends = getFriendsById(userId);
+        Set<Integer> userFriends = user.getFriends();
         if (userFriends.contains(friendId)) {
             final String sqlQuery = "DELETE FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ?;";
             return jdbcTemplate.update(sqlQuery, userId, friendId) > 1;
@@ -161,42 +150,34 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> displayFriends(Integer id) {
-        final String sqlQuery = "SELECT u.user_id AS user_id, " +
-                "u.email AS email, " +
-                "u.login AS login, " +
-                "u.name AS name, " +
-                "u.birthday AS birthday " +
-                "FROM FRIENDSHIPS f " +
-                "JOIN USERS u ON f.friend_id = u.user_id " +
-                "WHERE f.user_id = ?;";
+        final String sqlQuery =
+                "SELECT u.user_id, u.email, u.login, u.name, u.birthday, f.friend_id " +
+                        "FROM users u " +
+                        "LEFT JOIN friendships f ON u.USER_ID = f.USER_ID " +
+                        "WHERE u.user_id IN (SELECT friend_id " +
+                        "                   FROM friendships " +
+                        "                   WHERE user_id = ?);";
 
-        return jdbcTemplate.query(sqlQuery, UserDbStorage::construct, id);
+        return jdbcTemplate.query(sqlQuery, new UserMapper(), id);
     }
 
     @Override
     public List<User> displayCommonFriends(Integer userId1, Integer userId2) {
-        Set<Integer> userOneFriends = getFriendsById(userId1);
-        Set<Integer> userTwoFriends = getFriendsById(userId2);
 
-        List<User> commonFriends = new ArrayList<>();
+        final String sqlQuery =
+                "SELECT u.user_id, u.email, u.login, u.name, u.birthday, f.friend_id " +
+                        "FROM users u " +
+                        "LEFT JOIN friendships f ON u.USER_ID = f.USER_ID " +
+                        "WHERE u.user_id IN (SELECT f1.friend_id " +
+                        "                    FROM   (SELECT * " +
+                        "                            FROM FRIENDSHIPS " +
+                        "                            WHERE user_id = ?) f1 INNER JOIN ( " +
+                        "                                       SELECT * " +
+                        "                                       FROM FRIENDSHIPS " +
+                        "                                       WHERE user_id = ?) f2 " +
+                        "                                       ON f1.friend_id = f2.friend_id);";
 
-        for (Integer userId : userOneFriends) {
-            if (userTwoFriends.contains(userId)) {
-                commonFriends.add(getUserById(userId));
-            }
-        }
-        return commonFriends;
-    }
-
-    private static User construct(ResultSet rs, int rowNum) throws SQLException {
-        Set<Integer> friendsList = new HashSet<>();
-
-        return new User(rs.getInt("user_id"),
-                rs.getString("email"),
-                rs.getString("login"),
-                rs.getString("name"),
-                rs.getDate("birthday").toLocalDate(),
-                friendsList);
+        return jdbcTemplate.query(sqlQuery, new UserMapper(), userId1, userId2);
     }
 
     private Set<Integer> getFriendsById(Integer id) {
@@ -209,5 +190,46 @@ public class UserDbStorage implements UserStorage {
                 return rs.getInt("friend_id");
             }
         }, id));
+    }
+
+    private void updateFriends(User user, Set<Integer> currentFriends, Set<Integer> newFriends) {
+        List<Integer> currentFriendsList = new ArrayList<>(currentFriends);
+        List<Integer> newFriendsList = new ArrayList<>(newFriends);
+        clearUserFriends(user);
+
+        final String sqlQuery = "INSERT INTO friendships (user_id, friend_Id) VALUES (?, ?);";
+
+        if (!newFriendsList.isEmpty()) {
+            jdbcTemplate.batchUpdate(sqlQuery, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setInt(1, user.getId());
+                    ps.setInt(2, newFriendsList.get(i));
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return newFriendsList.size();
+                }
+            });
+        }
+    }
+
+    private void clearUserFriends(User user) {
+        final String sqlQuery = "DELETE FROM FRIENDSHIPS WHERE user_id = ?;";
+
+        List<Integer> currentFriendsList = new ArrayList<>(user.getFriends());
+
+        jdbcTemplate.batchUpdate(sqlQuery, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setInt(1, user.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return currentFriendsList.size();
+            }
+        });
     }
 }

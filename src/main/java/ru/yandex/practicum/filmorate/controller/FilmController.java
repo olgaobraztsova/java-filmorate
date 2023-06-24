@@ -46,9 +46,9 @@ public class FilmController {
 
     //PUT /films/{id}/like/{userId} — пользователь ставит лайк фильму.
     @PutMapping("{id}/like/{userId}")
-    public Integer addLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public void addLike(@PathVariable Integer id, @PathVariable Integer userId) {
         log.debug("Добавлен лайк к фильму с ID {}", id);
-        return filmService.addLike(id, userId);
+        filmService.addLike(id, userId);
     }
 
     //DELETE /films/{id}/like/{userId} — пользователь удаляет лайк.
