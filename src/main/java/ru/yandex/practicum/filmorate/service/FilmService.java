@@ -1,70 +1,46 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.FilmStorage;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FilmService {
 
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
 
-    public Film addLike(Integer filmId, Integer userId) {
-        Film film = filmStorage.getFilmById(filmId);
-        User user = userStorage.getUserById(userId);
-
-        // добавить лайк и обновить фильм в базе
-        Set<Integer> likes = film.getLikes();
-        likes.add(user.getId());
-        film.setLikes(likes);
-        filmStorage.update(film);
-        return film;
+    public Collection<Film> getAllFilms() {
+        return filmStorage.getAllFilms();
     }
 
-    public Film removeLike(Integer filmId, Integer userId) {
-        Film film = filmStorage.getFilmById(filmId);
-        User user = userStorage.getUserById(userId);
+    public Film getFilmById(String id) {
+        return filmStorage.getFilmById(Integer.parseInt(id));
+    }
 
-        // удалить лайк и обновить фильм в базе
-        Set<Integer> likes = film.getLikes();
-        if (likes.contains(userId)) {
-            likes.remove(user.getId());
-            film.setLikes(likes);
-            filmStorage.update(film);
-        }
-        return film;
+    public Film create(Film film) {
+        return filmStorage.create(film);
+    }
+
+    public Film update(Film film) {
+        return filmStorage.update(film);
+    }
+
+    public void addLike(Integer filmId, Integer userId) {
+        filmStorage.addLike(filmId, userId);
+    }
+
+    public boolean removeLike(Integer filmId, Integer userId) {
+        return filmStorage.removeLike(filmId, userId);
     }
 
     public List<Film> getMostLikedFilms(Integer count) {
-
-        Collection<Film> films = filmStorage.getAllFilms();
-        List<Film> sortedFilmList = new ArrayList<>();
-
-        if (films.size() == 1) {
-            return new ArrayList<>(films);
-        }
-
-        if (films.size() > 1) {
-            sortedFilmList = films.stream()
-                    .sorted(this::compare)
-                    .limit(count)
-                    .collect(Collectors.toList());
-        }
-        return sortedFilmList;
+        return filmStorage.getMostPopularFilms(count);
     }
 
-    private int compare(Film f1, Film f2) {
-        if (f1.getLikes() != null && f2.getLikes() != null) {
-            return f2.getLikes().size() - f1.getLikes().size();
-        }
-        return 0;
-    }
 }

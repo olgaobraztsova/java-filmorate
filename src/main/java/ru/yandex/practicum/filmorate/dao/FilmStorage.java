@@ -1,8 +1,9 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dao;
 
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface FilmStorage {
     Collection<Film> getAllFilms();
@@ -12,4 +13,10 @@ public interface FilmStorage {
     Film update(Film film);
 
     Film getFilmById(Integer id);
+
+    void addLike(Integer filmId, Integer userId);
+
+    boolean removeLike(Integer filmId, Integer userId);
+
+    List<Film> getMostPopularFilms(Integer count);
 }

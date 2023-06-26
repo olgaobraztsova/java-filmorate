@@ -17,6 +17,7 @@ target/
 mvnw
 mvnw.cmd
 HELP.md
+add-database-tests-sprint.json
 
 ### STS ###
 .apt_generated
