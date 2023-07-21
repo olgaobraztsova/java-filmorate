@@ -220,7 +220,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private Set<Integer> getLikesByFilmId(Integer id) {
         String query = "SELECT user_id FROM likes WHERE film_id = ?";
-
+        System.out.println();
         return new HashSet<Integer>(jdbcTemplate.query(query, new RowMapper<Integer>() {
             @Override
             public Integer mapRow(ResultSet rs, int rowNum) throws SQLException {
