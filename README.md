@@ -15,6 +15,9 @@ Filmorate app is a film-based social network where users can rate and view ratin
 - Users: adding, editing, viewing, adding and removing friends, viewing common friends;
 - Films: adding, editing, adding and removing a like, getting most liked films
 
+# Requirements
+- Java 11
+
 # Developer
 [Olga Obraztsova](https://github.com/olgaobraztsova)
 
